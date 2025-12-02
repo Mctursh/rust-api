@@ -40,6 +40,20 @@ pub fn read_page (file: &File, page_id: u32) -> Result<[u8; PAGE_SIZE as usize]>
 
 }
 
+pub fn write_page (file: &File, page_id: u32, data: &[u8; PAGE_SIZE as usize]) -> Result<()> {
+    let mut writer = BufWriter::new(file);
+
+    let offset = (page_id * PAGE_SIZE) as u64;
+
+    writer.seek(SeekFrom::Start(offset))?;
+
+    writer.write_all(data)?;
+
+    writer.flush()?;
+    
+    Ok(())
+}
+
 // pub fn create_database (path: &Path) -> Result<BufWriter<File>> {
 pub fn create_database (path: &Path) -> Result<File> {
     // Todo: add auto create folder for db files if folder missing
