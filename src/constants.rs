@@ -10,4 +10,5 @@ pub const TABLES_CATALOG_PAGE: u8 = 1;
 pub const COLUMNS_CATALOG_PAGE: u8 = 2;
 pub const FIRST_DATA_PAGE: u32 = 3;
 pub const MAX_STRING_LENGTH: u16 = 65535;
+pub const DEFAULT_BUFFER_POOL_SIZE: usize = 64;
 
