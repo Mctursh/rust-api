@@ -121,6 +121,7 @@ impl BufferPool {
         let page = self.find_page(page_id)?;
         if let Some(page) = page {
             write_page(file, page_id, &page.data)?;
+            page.cleanup();
             Ok(())
         } else {
             //TODO: will use the appropriate error for flush failure
