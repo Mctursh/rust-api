@@ -120,9 +120,16 @@ impl BufferPool {
     pub fn flush_page (&mut self, page_id: u32, file: &File) -> PoolResult<()> {
         let page = self.find_page(page_id)?;
         if let Some(page) = page {
-            write_page(file, page_id, &page.data)?;
-            page.cleanup();
-            Ok(())
+            match write_page(file, page_id, &page.data) {
+                Ok(_) => {
+                    page.cleanup();
+                    return Ok(())
+                },
+                Err(_) => {
+                    page.cleanup(); 
+                    return Err(DbError::UnterminatedString) //TODO: use right error ENUM
+                }
+            };
         } else {
             //TODO: will use the appropriate error for flush failure
             Err(DbError::UnterminatedString)
