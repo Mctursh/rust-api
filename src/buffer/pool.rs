@@ -14,7 +14,7 @@ use crate::error::DbError;
 type PoolResult<T> = Result<T, DbError>;
 type PoolPageReuslt<T> = PoolResult<Option<T>>;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct PoolEntry {
     page_id: Option<u32>,
     data: [u8; PAGE_SIZE as usize],
@@ -23,8 +23,8 @@ pub struct PoolEntry {
     last_accessed: u64
 }
 
-impl Default for PoolEntry {
-    fn default() -> Self {
+impl PoolEntry {
+    fn empty() -> Self {
         Self {
             page_id: None,
             data: [0u8; PAGE_SIZE as usize],
@@ -43,6 +43,12 @@ impl PoolEntry {
     }
 }
 
+impl Drop for PoolEntry {
+    fn drop(&mut self) {
+        self.cleanup();
+    }
+}
+
 pub struct BufferPool {
     entries: [PoolEntry; DEFAULT_BUFFER_POOL_SIZE],
     access_counter: u64, // increments on each access, used instead of timestamps.
@@ -51,7 +57,7 @@ pub struct BufferPool {
 impl BufferPool {
     pub fn new () -> PoolResult<BufferPool> {
         Ok(Self {
-            entries: [Default::default(); DEFAULT_BUFFER_POOL_SIZE],
+            entries: std::array::from_fn(|_| PoolEntry::empty()),
             access_counter: 0
         })
     }
@@ -120,16 +126,8 @@ impl BufferPool {
     pub fn flush_page (&mut self, page_id: u32, file: &File) -> PoolResult<()> {
         let page = self.find_page(page_id)?;
         if let Some(page) = page {
-            match write_page(file, page_id, &page.data) {
-                Ok(_) => {
-                    page.cleanup();
-                    return Ok(())
-                },
-                Err(_) => {
-                    page.cleanup(); 
-                    return Err(DbError::UnterminatedString) //TODO: use right error ENUM
-                }
-            };
+            write_page(file, page_id, &page.data)?;
+            Ok(())
         } else {
             //TODO: will use the appropriate error for flush failure
             Err(DbError::UnterminatedString)
@@ -137,8 +135,6 @@ impl BufferPool {
     }
 }
 mod pool {
-    use crate::error::DbError;
-
     // pub fn flush_page (page_id: u32, ) -> Result<(), DbError> {
 
     //     Ok(())
