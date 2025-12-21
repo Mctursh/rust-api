@@ -5,6 +5,9 @@ use std::fmt::{Display, Formatter};
 use crate::constants::{
     COLUMNS_CATALOG_PAGE, FILE_FORMAT_VERSION, FIRST_DATA_PAGE, MAGIC_NUMBER, NULL_PAGE, PAGE_HEADER_SIZE, PAGE_SIZE, SLOT_BYTE_SIZE, TABLES_CATALOG_PAGE
 };
+use crate::error::DbError;
+
+pub type DbResult<T> = Result<T, DbError>;
 
 #[derive(Clone, Copy, Debug)]
 #[repr(u8)]

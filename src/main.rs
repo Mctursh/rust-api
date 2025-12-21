@@ -9,14 +9,19 @@ use axum::{
     routing::get,
     Router,
 };
-use rust_api::{create_database, open_database, read_page};
+
+// use crate::
+// use rust_api::Database;
+use rust_api::Database;
+// use rust_api::{create_database, open_database, read_page};
 
 use std::{cell::{Cell, RefCell}, path::Path, rc::Rc, io::Error};
 
-use crate::types::PageHeader;
+use rust_api::types::{DbResult, PageHeader};
+// use crate::{types::{DbResult, PageHeader}};
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
+async fn main() -> DbResult<()> {
     // let app = Router::new()
     //     .route("/", get(|| async { "Hello World!" }))
     //     .route("/test", get(|| async { "tes world" }));
@@ -26,12 +31,13 @@ async fn main() -> Result<(), Error> {
     // axum::serve(listener, app).await.unwrap();
     let path = Path::new("./data/test.db");
     // let database = create_database(path)?;
-    let (file_header, file) = open_database(path)?;
+    let mut db = Database::new(path)?;
+    // let (file_header, file) = Database::open_database(path)?;
 
-    print!("The file header struct is: {:#?}", file_header);
+    // print!("The file header struct is: {:#?}", file_header);
     // println!("got passed here");
-    let page_1_bytes = read_page(&file, 1)?;
-    let page_2_bytes = read_page(&file, 2)?;
+    let page_1_bytes = db.read_page(1)?;
+    let page_2_bytes = db.read_page(2)?;
 
 
     let table_header = PageHeader::from_bytes(&page_1_bytes);
@@ -39,6 +45,12 @@ async fn main() -> Result<(), Error> {
 
     print!("Table header is: {:#?}", table_header);
     print!("Table column is: {:#?}", column_header);
+    
+    let page_2_bytes = db.read_page(2)?;
+
+    print!("Table column second read is: {:#?}", page_2_bytes);
+
+
 
 
 

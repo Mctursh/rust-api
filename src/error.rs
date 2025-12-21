@@ -1,4 +1,4 @@
-use std::{io::Error, string::FromUtf8Error};
+use std::{fs::File, io::{BufWriter, Error, IntoInnerError}, string::FromUtf8Error};
 
 #[derive(Debug)]
 pub enum DbError {
@@ -18,7 +18,8 @@ pub enum DbError {
     PageFull { page_id: u32 },
     CorruptPage { page_id: u32 },
     Io(Error),
-    strconv(FromUtf8Error)
+    Strconv(FromUtf8Error),
+    FileConv(IntoInnerError<BufWriter<File>>)
     // SYNTAX_UNEXPECTED_TOKEN,
     // SYNTAX_UNTERMINATED_STRING,
     // SYNTAX_INVALID_NUMBER,
@@ -43,6 +44,12 @@ impl From<Error> for DbError {
 
 impl From<FromUtf8Error> for DbError {
     fn from (err: FromUtf8Error) -> Self {
-        DbError::strconv(err)
+        DbError::Strconv(err)
+    }
+}
+
+impl From<IntoInnerError<BufWriter<File>>> for DbError {
+    fn from (err: IntoInnerError<BufWriter<File>>) -> Self {
+        DbError::FileConv(err)
     }
 }

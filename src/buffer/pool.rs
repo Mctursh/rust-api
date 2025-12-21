@@ -2,7 +2,7 @@
 
 use std::fs::File;
 
-use rust_api::write_page;
+// use rust_api::write_page;
 
 use crate::constants::{
     PAGE_SIZE,
@@ -16,11 +16,11 @@ type PoolPageReuslt<T> = PoolResult<Option<T>>;
 
 #[derive(Debug, Clone)]
 pub struct PoolEntry {
-    page_id: Option<u32>,
-    data: [u8; PAGE_SIZE as usize],
-    is_dirty: bool,
-    pin_count: u32,
-    last_accessed: u64
+    pub page_id: Option<u32>,
+    pub data: [u8; PAGE_SIZE as usize],
+    pub is_dirty: bool,
+    pub pin_count: u32,
+    pub last_accessed: u64
 }
 
 impl PoolEntry {
@@ -50,16 +50,17 @@ impl Drop for PoolEntry {
 }
 
 pub struct BufferPool {
-    entries: [PoolEntry; DEFAULT_BUFFER_POOL_SIZE],
+    pub entries: [PoolEntry; DEFAULT_BUFFER_POOL_SIZE],
     access_counter: u64, // increments on each access, used instead of timestamps.
 }
 
 impl BufferPool {
-    pub fn new () -> PoolResult<BufferPool> {
-        Ok(Self {
+    pub fn new () -> BufferPool {
+    // pub fn new () -> PoolResult<BufferPool> {
+        Self {
             entries: std::array::from_fn(|_| PoolEntry::empty()),
             access_counter: 0
-        })
+        }
     }
 
     pub fn find_page (&mut self, page_id: u32) -> PoolPageReuslt<&mut PoolEntry> {
@@ -107,13 +108,14 @@ impl BufferPool {
         let mut least_last_accessed_value = 0_u64;
         let mut evicted_pool: Option<&mut PoolEntry> = None;
         for entry in self.entries.iter_mut()
-            .filter(|entry | entry.pin_count == 0) // returns nly pages with Zero pin count i.e being used in the code currently.
+            .filter(|entry | entry.pin_count == 0) // returns nly pages with Zero pin count i.e not being used in the code currently.
         {
             if entry.last_accessed <= least_last_accessed_value {
                 least_last_accessed_value = entry.last_accessed;
                 evicted_pool = Some(entry)
             }
         };
+
         if let Some(pool) = evicted_pool {
             pool.pin_count += 1; // increase pin count
             return Ok(pool);
@@ -123,16 +125,16 @@ impl BufferPool {
         }
     }
 
-    pub fn flush_page (&mut self, page_id: u32, file: &File) -> PoolResult<()> {
-        let page = self.find_page(page_id)?;
-        if let Some(page) = page {
-            write_page(file, page_id, &page.data)?;
-            Ok(())
-        } else {
-            //TODO: will use the appropriate error for flush failure
-            Err(DbError::UnterminatedString)
-        }
-    }
+    // pub fn flush_page (&mut self, page_id: u32, file: &File) -> PoolResult<()> {
+    //     let page = self.find_page(page_id)?;
+    //     if let Some(page) = page {
+    //         write_page(file, page_id, &page.data)?;
+    //         Ok(())
+    //     } else {
+    //         //TODO: will use the appropriate error for flush failure
+    //         Err(DbError::UnterminatedString)
+    //     }
+    // }
 }
 mod pool {
     // pub fn flush_page (page_id: u32, ) -> Result<(), DbError> {
